@@ -22,8 +22,6 @@ This will setup start the following treesitter based actions
 - Early exit
 - Highlight named imports
 - Highlight default exports
-- Score of cyclomatic complexity
-
 
 ```lua
 require('static').setup()
