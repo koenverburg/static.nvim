@@ -22,9 +22,6 @@ function M.setup(opts)
 
     ts.default_exports_clear()
     ts.default_exports()
-
-    ts.cyclomatic_complexity_clear()
-    ts.cyclomatic_complexity()
   end)
 end
 

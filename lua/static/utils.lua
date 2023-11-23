@@ -1,8 +1,6 @@
 local M = {}
 
-function M.noop()
-
-end
+function M.noop() end
 
 function M.register_autocmd(name, callback)
   local augroup = "static-" .. name

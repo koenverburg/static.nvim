@@ -4,7 +4,6 @@ local regions               = require('static.treesitter.regions')
 local early_exits           = require('static.treesitter.early_exits')
 local named_imports         = require('static.treesitter.named_imports')
 local default_exports       = require('static.treesitter.default_exports')
-local cyclomatic_complexity = require('static.treesitter.cyclomatic_complexity')
 
 function M.fold_imports()
   fold.imports()
@@ -25,9 +24,5 @@ function M.named_imports_clear() return named_imports.clear() end
 function M.default_exports() return default_exports.show() end
 
 function M.default_exports_clear() return default_exports.clear() end
-
-function M.cyclomatic_complexity() return cyclomatic_complexity.show() end
-
-function M.cyclomatic_complexity_clear() return cyclomatic_complexity.clear() end
 
 return M
