@@ -4,7 +4,6 @@ local config = require('static.config')
 local M = {}
 
 local function_queriess = [[
-  (function) @captures
   (arrow_function) @captures
   (method_definition) @captures
   (lexical_declaration) @captures
