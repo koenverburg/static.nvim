@@ -3,42 +3,80 @@ local config = require('static.config')
 
 local M = {}
 
-local import_query = [[ (import_statement) @captures ]]
+local query_string = [[
+  ;; default-only
+  (import_clause
+    (identifier) @default_import
+  )
+
+  ;; default + named
+  (import_clause
+    (identifier) @default_import
+    (named_imports
+      (import_specifier
+        name: (identifier) @imported_name
+        alias: (identifier)? @imported_alias
+      )
+    )
+  )
+
+  ;; named-only
+  (import_clause
+    (named_imports
+      (import_specifier
+        name: (identifier) @imported_name
+        alias: (identifier)? @imported_alias
+      )
+    )
+  )
+
+  ;; namespace import
+  (import_clause
+    (namespace_import
+      (identifier) @namespace_import
+    )
+  )
+]]
 
 function M.show()
   local bufnr = vim.api.nvim_get_current_buf()
-  if not utils.enabled_when_supprted_filetype(config.supported_filetypes, bufnr) then
-    return utils.noop
-  end
 
-  local _, parsed, root = utils.query_buffer(bufnr, import_query)
-  if not parsed then
-    return utils.noop
-  end
-  for _, match in parsed:iter_matches(root, bufnr) do
-    for _, node in pairs(match) do
-      local text = vim.treesitter.get_node_text(node, bufnr)
-      local line, col, _ = node:start()
+  local lang = vim.bo[bufnr].filetype
+  local ok, parser = pcall(vim.treesitter.get_parser, bufnr, lang)
+  if not ok or not parser then return end
 
-      if string.match(text, "* as") then
-        utils.setVirtualText(
-          config.namespace.ns_imports,
-          line,
-          col,
-          "Star import found",
-          config.signs.error.text,
-          config.signs.error.highlightGroup
-        )
-      elseif not string.match(text, "{") then
-        utils.setVirtualText(
-          config.namespace.ns_imports,
-          line,
-          col,
-          "Named import found",
-          config.signs.error.text,
-          config.signs.error.highlightGroup
-        )
-      end
+  local tree = parser:parse()[1]
+  if not tree then return end
+  local root = tree:root()
+  local query = vim.treesitter.query.parse(lang, query_string)
+
+  for id, node in query:iter_captures(root, bufnr, 0, -1) do
+    local capture = query.captures[id]
+    local text = vim.treesitter.get_node_text(node, bufnr)
+    local line, col = node:range()
+
+    local label = ({
+      default_import = "default import found",
+      -- imported_name = "← named import",
+      -- imported_alias = "← alias",
+    })[capture]
+
+    local hl = ({
+      default_import = "WarningMsg",
+      -- imported_name = "WarningMsg",
+      -- imported_alias = "MoreMsg",
+    })[capture]
+
+    if label and hl then
+      utils.setVirtualText(
+        bufnr,
+        config.namespace.ns_imports,
+        line,
+        col,
+        label,
+        config.signs.error.icon,
+        config.signs.error.highlightGroup
+      )
     end
   end
 end

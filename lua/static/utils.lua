@@ -1,3 +1,5 @@
+local config = require('static.config')
+
 local M = {}
 
 function M.noop() end
@@ -21,10 +23,10 @@ end
 function M.register_ts_autocmd(name, callback)
   local augroup = "static-ts-" .. name
   local events = {
-    "FileType",
+    -- "FileType",
     "BufEnter",
-    -- "BufWritePost",
-    "DiagnosticChanged",
+    "BufWritePost",
+    -- "DiagnosticChanged",
   }
   vim.api.nvim_create_augroup(augroup, {})
   vim.api.nvim_create_autocmd(events, {
@@ -38,7 +40,9 @@ function M.enabled_when_supprted_filetype(supported_filetypes, bufnr)
     print("No supported filetypes or bufnr")
     return false
   end
-  local filetype = vim.api.nvim_buf_get_option(bufnr, "ft")
+
+  local filetype = vim.bo.filetype
+  -- local filetype = vim.api.nvim_buf_get_option(bufnr, 'filetype')
 
   if M.contains(supported_filetypes, filetype) then
     return true
@@ -76,15 +80,16 @@ function M.is_empty(v)
   return v == nil or v == ""
 end
 
-function M.setVirtualText(ns, line, col, text, prefix, color)
-  color = color or "Comment"
+function M.setVirtualText(bufnr, ns, line, col, text, prefix, color)
   local virtualText = string.format("%s", text)
 
   if not M.is_empty(prefix) then
     virtualText = string.format("%s %s", prefix, text)
   end
 
-  vim.api.nvim_buf_set_virtual_text(0, ns, line, { { virtualText, color } }, {})
+  vim.api.nvim_buf_set_extmark(bufnr, ns, line, col, {
+    virt_text = { { virtualText, color or "Comment" } },
+  })
 end
 
 local function createIndent(tbl, length)
@@ -116,7 +121,7 @@ function M.setVirtualTextAbove(ns, line, col, text, prefix, color)
 end
 
 function M.query_buffer(bufnr, queries)
-  local filetype = vim.api.nvim_buf_get_option(bufnr, "ft")
+  local filetype = vim.bo.filetype
   local lang = require("nvim-treesitter.parsers").ft_to_lang(filetype)
 
   local parser = vim.treesitter.get_parser(bufnr, lang)

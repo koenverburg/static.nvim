@@ -1,3 +1,4 @@
+local config = require('static.config')
 local utils = require('static.utils')
 local ts = require('static.treesitter')
 local M = {}
@@ -13,6 +14,7 @@ M.defaults = {
 
 function M.setup(opts)
   opts = opts or M.defaults
+  
   utils.register_ts_autocmd('root', function()
     ts.early_exits_clear()
     ts.early_exits()
