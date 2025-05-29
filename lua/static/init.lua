@@ -1,6 +1,9 @@
-local config = require('static.config')
+require("static.treesitter.typescript.generate_tests")
+
 local utils = require('static.utils')
+local config = require('static.config')
 local ts = require('static.treesitter')
+
 local M = {}
 
 M.defaults = {
@@ -14,7 +17,11 @@ M.defaults = {
 
 function M.setup(opts)
   opts = opts or M.defaults
-  
+
+  if not utils.enabled_when_supprted_filetype(config.supported_filetypes, bufnr) then
+    return
+  end
+
   utils.register_ts_autocmd('root', function()
     ts.early_exits_clear()
     ts.early_exits()
