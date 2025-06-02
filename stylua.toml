@@ -1,0 +1,17 @@
+# .stylua.toml
+# StyLua configuration with double quotes and aligned equals signs
+
+column_width = 120
+indent_type = "Spaces"
+indent_width = 2
+quote_style = "ForceDouble"
+call_parentheses = "Always"
+
+# Keep function definitions with parentheses
+collapse_simple_statement = "Never"
+
+# Align equals signs at the same level
+# align_assignments = true
+
+[sort_requires]
+enabled = true

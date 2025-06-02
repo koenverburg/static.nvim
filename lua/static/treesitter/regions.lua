@@ -1,13 +1,13 @@
-local utils = require('static.utils')
-local config = require('static.config')
+local config = require("static.config")
+local utils = require("static.utils")
 
 local M = {}
 
 -- #region queries
 local queries = {
-  lua             = "(comment) @captures",
-  javascript      = "(comment) @captures",
-  typescript      = "(comment) @captures",
+  lua = "(comment) @captures",
+  javascript = "(comment) @captures",
+  typescript = "(comment) @captures",
   reactjavascript = "(comment) @captures",
   reacttypescript = "(comment) @captures",
 }
@@ -29,11 +29,11 @@ function M.main()
     for _, node in pairs(match) do
       local text = vim.treesitter.get_node_text(node, bufnr)
 
-      if string.find(text, '#region') then
+      if string.find(text, "#region") then
         table.insert(nodes_of_interest, node)
       end
 
-      if string.find(text, '#endregion') then
+      if string.find(text, "#endregion") then
         table.insert(nodes_of_interest, node)
       end
     end

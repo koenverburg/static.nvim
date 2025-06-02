@@ -1,4 +1,4 @@
-local config = require('static.config')
+local config = require("static.config")
 
 local M = {}
 

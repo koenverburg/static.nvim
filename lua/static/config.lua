@@ -20,7 +20,7 @@ M.namespace = {
   ns_imports = vim.api.nvim_create_namespace("static/imports"),
   --    ns_references = vim.api.nvim_create_namespace("static/references"),
   ns_early_exit = vim.api.nvim_create_namespace("static/early-exit"),
-  ns_default_exports = vim.api.nvim_create_namespace("static/default_exports")
+  ns_default_exports = vim.api.nvim_create_namespace("static/default_exports"),
 }
 
 return M

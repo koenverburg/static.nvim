@@ -1,5 +1,5 @@
-local utils = require('static.utils')
-local config = require('static.config')
+local config = require("static.config")
+local utils = require("static.utils")
 
 local M = {}
 
@@ -43,10 +43,14 @@ function M.show()
 
   local lang = vim.bo[bufnr].filetype
   local ok, parser = pcall(vim.treesitter.get_parser, bufnr, lang)
-  if not ok or not parser then return end
+  if not ok or not parser then
+    return
+  end
 
   local tree = parser:parse()[1]
-  if not tree then return end
+  if not tree then
+    return
+  end
   local root = tree:root()
   local query = vim.treesitter.query.parse(lang, query_string)
 

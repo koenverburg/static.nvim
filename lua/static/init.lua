@@ -1,8 +1,7 @@
-require("static.treesitter.typescript.generate_tests")
-
-local utils = require('static.utils')
-local config = require('static.config')
-local ts = require('static.treesitter')
+-- require("static.treesitter.typescript.generate_tests")
+local ts = require("static.treesitter")
+local typescriptFunctions = require("static.typescript.functions.init")
+local utils = require("static.utils")
 
 local M = {}
 
@@ -12,20 +11,16 @@ M.defaults = {
 
     javascript = "(import_statement) @imports",
     typescript = "(import_statement) @imports",
-  }
+  },
 }
 
 function M.setup(opts)
   opts = opts or M.defaults
 
-  if not utils.enabled_when_supprted_filetype(config.supported_filetypes, bufnr) then
-    return
-  end
+  typescriptFunctions.setup()
+  typescriptFunctions.enable()
 
-  utils.register_ts_autocmd('root', function()
-    ts.early_exits_clear()
-    ts.early_exits()
-
+  utils.register_ts_autocmd("root", function()
     ts.named_imports_clear()
     ts.named_imports()
 
