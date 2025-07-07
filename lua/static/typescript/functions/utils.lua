@@ -123,4 +123,106 @@ M.find_identifier_usages = function(body_node, param_name)
   return usages
 end
 
+-- Check if a node has more than N lines
+function M.is_large_enough(node, min_lines)
+  local start_row, _, end_row, _ = node:range()
+  return (end_row - start_row + 1) > min_lines
+end
+
+-- Check if node is exported
+function M.is_exported(node)
+  local parent = node:parent()
+  while parent do
+    if parent:type() == "export_statement" or parent:type() == "export_clause" then
+      return true
+    end
+    parent = parent:parent()
+  end
+  return false
+end
+
+M.query_for_functions = function (bufnr)
+    -- Get the syntax tree
+    local parser = ts.get_parser(bufnr)
+    if not parser then
+    return
+    end
+
+    local tree = parser:parse()[1]
+    if not tree then
+    return
+    end
+
+    local root = tree:root()
+
+    -- Query exported functions with bodies
+    local function_query_string = [[
+    ;; Match exported function declarations with body
+    (
+        (function_declaration
+        name: (identifier) @name
+        body: (statement_block) @body
+        (#offset! @body)
+        )
+        (#match? @name ".*") ;; ensures name is valid (optional)
+        (#has-export? @name)
+    )
+
+    ;; Match exported arrow functions assigned to variables
+    (
+        (lexical_declaration
+        (variable_declarator
+            name: (identifier) @name
+            value: (arrow_function
+            body: (statement_block) @body
+            )
+        )
+        )
+        (#has-export? @name)
+    )
+
+    ;; Match exported methods inside classes
+    (
+        (method_definition
+        name: (property_identifier) @name
+        body: (statement_block) @body
+        )
+        (#has-export? @name)
+    )
+    ]]
+
+    -- Parse the query
+    local ok, function_query = pcall(ts.query.parse, "typescript", function_query_string)
+    if not ok then
+      vim.notify("Failed to parse Tree-sitter query", vim.log.levels.ERROR)
+      return
+    end
+
+    return {
+        root = root,
+        function_query = function_query
+    }
+end
+
+M.find_function_at_cursor = function(root, cursor_row)
+  local query = vim.treesitter.query.parse(
+    "typescript",
+    [[
+    (function_declaration) @func
+    (method_definition) @func
+    (arrow_function) @func
+    (function_expression) @func
+  ]]
+  )
+
+  for _, node in query:iter_captures(root, 0) do
+    local start_row, _, end_row, _ = node:range()
+    if cursor_row >= start_row and cursor_row <= end_row then
+      return node
+    end
+  end
+
+  return nil
+end
+
 return M

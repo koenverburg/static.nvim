@@ -9,4 +9,5 @@ return {
     show_function_ends = true,
   },
   ns_id = vim.api.nvim_create_namespace("ts_function_hints"),
+  ns_functions = vim.api.nvim_create_namespace("ts_function_hints"),
 }

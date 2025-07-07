@@ -727,7 +727,7 @@ function M.find_dead_code()
   ]]
   )
 
-  for id, node in unreachable_query:iter_captures(root, 0) do
+  for _, node in unreachable_query:iter_captures(root, 0) do
     local parent = node:parent()
     if parent and parent:type() == "statement_block" then
       local return_index = nil

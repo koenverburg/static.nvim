@@ -10,7 +10,156 @@ local config = settings.config
 function M.clear_hints()
   local bufnr = api.nvim_get_current_buf()
   api.nvim_buf_clear_namespace(bufnr, settings.ns_id, 0, -1)
+  api.nvim_buf_clear_namespace(bufnr, settings.ns_functions, 0, -1)
 end
+
+function M.render_function_hints()
+    local bufnr = api.nvim_get_current_buf()
+    local filetype = api.nvim_buf_get_option(bufnr, "filetype")
+
+    -- Only process TypeScript/JavaScript files
+    if not vim.tbl_contains({ "typescript", "javascript", "typescriptreact", "javascriptreact" }, filetype) then
+      return
+    end
+
+    -- Get the syntax tree
+    local parser = ts.get_parser(bufnr)
+    if not parser then
+      return
+    end
+
+    local tree = parser:parse()[1]
+    if not tree then
+      return
+    end
+
+    local root = tree:root()
+
+    -- Function query
+    local function_query_string = [[
+      (arrow_function) @function
+      (method_definition) @function
+      (function_expression) @function
+      (function_declaration) @function
+    ]]
+
+    local function_query = ts.query.parse("typescript", function_query_string)
+
+    for _, node in function_query:iter_captures(root, bufnr, 0, -1) do
+      local start_row, _, _, _ = node:range()
+      local virtual_text = "fold <leader>fc, <leader>fa to fold all funcs"
+
+      -- Place virtual text above the function
+      api.nvim_buf_set_extmark(bufnr, settings.ns_functions, start_row-1, 0, {
+        virt_text = { { virtual_text, config.virtual_text_color } },
+        virt_text_pos = "inline",
+
+        -- virt_lines = { { virtual_text, config.virtual_text_color } },
+        -- virt_lines_above = true,
+      })
+    end
+end
+
+function M.fold_current_function()
+    local line = vim.fn.line('.')
+
+    if vim.fn.foldclosed(line) ~= -1 then
+      vim.cmd("normal! zo")  -- Open fold
+    end
+    -- else
+      -- vim.cmd("normal! zc")  -- Close fold
+    -- end
+
+    local bufnr = api.nvim_get_current_buf()
+    local filetype = api.nvim_buf_get_option(bufnr, "filetype")
+
+    -- Only process TypeScript/JavaScript files
+    if not vim.tbl_contains({ "typescript", "javascript", "typescriptreact", "javascriptreact" }, filetype) then
+      return
+    end
+
+    -- Get the syntax tree
+    local parser = ts.get_parser(bufnr, "typescript")
+    if not parser then
+      return
+    end
+
+    local tree = parser:parse()[1]
+    if not tree then
+      return
+    end
+
+    local root = tree:root()
+
+    local cursor = vim.api.nvim_win_get_cursor(0)
+    local cursor_row = cursor[1] - 1 -- Convert to 0-based
+
+    local function_node = utils.find_function_at_cursor(root, cursor_row)
+    if not function_node then
+      print("No function found at cursor position")
+      return
+    end
+
+    local start_row, _, end_row, _ = function_node:range()
+    vim.cmd(string.format("%s,%s fold", start_row+1, end_row + 1))
+end
+
+function M.fold_all_function()
+    vim.cmd("normal! zR")
+
+    local bufnr = api.nvim_get_current_buf()
+    local filetype = api.nvim_buf_get_option(bufnr, "filetype")
+
+    -- Only process TypeScript/JavaScript files
+    if not vim.tbl_contains({ "typescript", "javascript", "typescriptreact", "javascriptreact" }, filetype) then
+      return
+    end
+
+    -- Get the syntax tree
+    local parser = ts.get_parser(bufnr)
+    if not parser then
+      return
+    end
+
+    local tree = parser:parse()[1]
+    if not tree then
+      return
+    end
+
+    local root = tree:root()
+
+    -- Function query
+    local function_query_string = [[
+      (arrow_function) @function
+      (method_definition) @function
+      (function_expression) @function
+      (function_declaration) @function
+    ]]
+
+    local function_query = ts.query.parse("typescript", function_query_string)
+
+    for _, node in function_query:iter_captures(root, bufnr, 0, -1) do
+        local start_row, _, end_row, _ = node:range()
+        vim.cmd(string.format("%s,%s fold", start_row+1, end_row + 1))
+    end
+end
+
+function M.clear_folds()
+    vim.cmd("normal! zR")
+end
+
+-- Add keymap setup function
+function M.setup_function_folding_keymaps()
+
+  -- Alternative keymaps you might want:
+  vim.keymap.set("n", "<leader>caf", M.clear_folds, { desc = "Clear all folds" })
+  vim.keymap.set("n", "<leader>fc", M.fold_current_function, { desc = "Fold current function" })
+  vim.keymap.set("n", "<leader>fa", M.fold_all_function, { desc = "Fold all functions" })
+end
+
+-- Call this in your plugin setup
+-- You would typically call M.setup_keymaps() in your plugin's setup function
+-- or in your init.lua/init.vim
 
 -- Main function to update hints
 function M.update_hints()

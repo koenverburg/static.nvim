@@ -1,5 +1,3 @@
-local config = require("static.config")
-
 local M = {}
 
 function M.noop() end
@@ -17,6 +15,7 @@ function M.register_autocmd(name, callback)
   vim.api.nvim_create_autocmd(events, {
     group = augroup,
     callback = callback,
+    pattern = { "*.ts", "*.tsx", "*.js", "*.jsx" },
   })
 end
 
@@ -32,6 +31,7 @@ function M.register_ts_autocmd(name, callback)
   vim.api.nvim_create_autocmd(events, {
     group = augroup,
     callback = callback,
+    pattern = { "*.ts", "*.tsx", "*.js", "*.jsx" },
   })
 end
 

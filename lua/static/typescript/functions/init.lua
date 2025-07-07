@@ -26,6 +26,7 @@ function M.setup(opts)
 
       timer = vim.defer_fn(function()
         logic.update_hints()
+        logic.render_function_hints()
       end, config.debounce_ms)
     end,
   })
@@ -52,6 +53,7 @@ end
 function M.enable()
   config.enabled = true
   logic.update_hints()
+  logic.setup_function_folding_keymaps()
   print("TS Function Hints: Enabled")
 end
 
